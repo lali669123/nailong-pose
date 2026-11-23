@@ -1,0 +1,37 @@
+# Python / virtual environment / caches
+.venv/
+.cache/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Personal captures, training data, and generated model artifacts
+captures/*
+!captures/.gitkeep
+data/*
+!data/.gitkeep
+models/*.joblib
+models/*.joblib.tmp
+models/*.png
+
+# Build / release outputs & logs
+release/
+build/
+dist/
+*.spec
+*.log
+*.zip
+*.exe
+
+# Internal dev spec
+SPEC.md
+
+# OS metadata
+.DS_Store
+Thumbs.db

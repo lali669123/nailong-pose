@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>奶龙家人鉴定 · 奶蛙动作识别演播室</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- 背景环境氛围光晕 -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-orb orb-gold"></div>
+    <div class="ambient-orb orb-amber"></div>
+    <div class="ambient-orb orb-cyan"></div>
+    <div class="ambient-grid"></div>
+  </div>
+
+  <!-- 顶部演播室 HUD 状态栏 -->
+  <header class="studio-header">
+    <div class="brand-group">
+      <div class="brand-logo" aria-hidden="true">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="logoGrad" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#FEF08A" />
+              <stop offset="50%" stop-color="#FACC15" />
+              <stop offset="100%" stop-color="#F59E0B" />
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="36" height="36" rx="11" fill="url(#logoGrad)" fill-opacity="0.18" stroke="url(#logoGrad)" stroke-width="2" />
+          <circle cx="15" cy="17" r="3" fill="#FEF08A" />
+          <circle cx="25" cy="17" r="3" fill="#FEF08A" />
+          <path d="M13 24.5C15.2 28 24.8 28 27 24.5" stroke="#FACC15" stroke-width="2.4" stroke-linecap="round" />
+          <path d="M11 11L15 13M29 11L25 13" stroke="#FDE047" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1 id="app-title" class="brand-title">奶龙家人鉴定 · 奶蛙动作识别</h1>
+        <span class="brand-sub">NAILONG POSE STUDIO · LIVE AI STAGE</span>
+      </div>
+    </div>
+
+    <div class="header-hud">
+      <!-- 声音解锁提示胶囊（需要用户首次点击时显示） -->
+      <button id="audio-unlock-pill" class="hud-pill hud-pill-alert hidden" type="button" title="浏览器限制自动播放声音，点击解锁原声">
+        <span class="pulse-dot dot-amber"></span>
+        <span>点击解锁奶蛙原声</span>
+      </button>
+
+      <!-- FPS 指示器 -->
+      <div class="hud-pill hud-fps" title="实时画面处理帧率">
+        <span class="hud-label">FPS</span>
+        <span id="fps-value" class="hud-mono">--</span>
+      </div>
+
+      <!-- 模型状态徽章 -->
+      <div id="model-badge" class="hud-pill hud-model status-untrained" title="当前动作分类模型状态">
+        <span class="status-dot"></span>
+        <span id="model-badge-text">模型未训练 · 可试播体验</span>
+      </div>
+
+      <!-- WebSocket 连接状态灯 -->
+      <div id="ws-badge" class="hud-pill hud-ws ws-connecting" title="实时状态推流连接状态">
+        <span class="status-dot"></span>
+        <span id="ws-badge-text">连接中...</span>
+      </div>
+
+      <!-- 声音开关 -->
+      <button id="btn-sound" class="icon-btn" type="button" aria-label="声音开关" title="切换配音静音状态">
+        <svg id="icon-sound-on" class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+        </svg>
+        <svg id="icon-sound-off" class="icon-svg hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+        <span class="btn-label" id="sound-label">原声开</span>
+      </button>
+
+      <!-- 全屏按钮 -->
+      <button id="btn-fullscreen" class="icon-btn" type="button" aria-label="切换全屏" title="切换大屏全屏录屏模式">
+        <svg id="icon-fs-enter" class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <polyline points="9 21 3 21 3 15"></polyline>
+          <line x1="21" y1="3" x2="14" y2="10"></line>
+          <line x1="3" y1="21" x2="10" y2="14"></line>
+        </svg>
+        <svg id="icon-fs-exit" class="icon-svg hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 14 10 14 10 20"></polyline>
+          <polyline points="20 10 14 10 14 4"></polyline>
+          <line x1="14" y1="10" x2="21" y2="3"></line>
+          <line x1="3" y1="21" x2="10" y2="14"></line>
+        </svg>
+        <span class="btn-label" id="fs-label">全屏</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 主体双栏演播室布局 -->
+  <main class="studio-main">
+    <!-- 左侧主舞台区 -->
+    <section class="stage-column" aria-label="实时识别主舞台">
+      <div id="stage-viewport" class="stage-viewport">
+        <!-- 摄像头 MJPEG 视频流 -->
+        <img id="video-feed" class="video-feed" src="/video_feed" alt="实时摄像头画面" />
+
+        <!-- 60fps 霓虹骨骼 & 粒子特效画布 -->
+        <canvas id="skeleton-canvas" class="skeleton-canvas"></canvas>
+
+        <!-- 舞台角落演播室取景框装饰 -->
+        <div class="stage-corners" aria-hidden="true">
+          <span class="corner corner-tl"></span>
+          <span class="corner corner-tr"></span>
+          <span class="corner corner-bl"></span>
+          <span class="corner corner-br"></span>
+        </div>
+
+        <!-- 顶部浮动实时状态 HUD -->
+        <div class="stage-top-hud">
+          <div class="stage-pill-group">
+            <span id="stage-mode-pill" class="stage-pill pill-live">
+              <span class="live-dot"></span>
+              <span id="stage-mode-text">LIVE 实战鉴定</span>
+            </span>
+            <span id="person-pill" class="stage-pill pill-muted">
+              <span id="person-pill-text">等待人物入镜</span>
+            </span>
+          </div>
+
+          <div id="live-candidate-pill" class="stage-pill pill-candidate hidden">
+            <span class="cand-dot" id="live-cand-dot"></span>
+            <span id="live-cand-name">--</span>
+            <span id="live-cand-conf" class="hud-mono">0%</span>
+          </div>
+        </div>
+
+        <!-- 待机预览提示胶囊（未点击开始游戏时显示） -->
+        <div id="game-standby-pill" class="game-standby-pill">
+          <span class="standby-dot"></span>
+          <span>当前为待机预览，点击下方「开始游戏」3 秒倒计时后开玩</span>
+        </div>
+
+        <!-- 游戏开始 3 秒大字准备倒计时遮罩 -->
+        <div id="game-countdown-overlay" class="game-countdown-overlay hidden" aria-live="assertive">
+          <div class="game-cd-ring" aria-hidden="true"></div>
+          <div id="game-cd-num" class="game-cd-num">3</div>
+          <div id="game-cd-tip" class="game-cd-tip">请退后站好，准备摆出奶蛙动作！</div>
+        </div>
+
+        <!-- 冷却状态轻量提示 -->
+        <div id="cooldown-pill" class="cooldown-pill hidden">
+          <span class="cooldown-spinner"></span>
+          <span>冷却蓄能中</span>
+          <span id="cooldown-time" class="hud-mono">2.5s</span>
+        </div>
+
+        <!-- 蓄力能量环（CHARGING 状态时高亮显现） -->
+        <div id="charge-hud" class="charge-hud hidden" aria-live="polite">
+          <div class="charge-ring-wrap">
+            <svg class="charge-svg" viewBox="0 0 180 180">
+              <circle class="charge-track" cx="90" cy="90" r="76" />
+              <circle id="charge-arc" class="charge-arc" cx="90" cy="90" r="76" />
+              <circle class="charge-ticks" cx="90" cy="90" r="64" />
+            </svg>
+            <div class="charge-center">
+              <img id="charge-avatar" class="charge-avatar" src="" alt="" />
+              <div id="charge-percent" class="charge-percent hud-mono">0%</div>
+            </div>
+          </div>
+          <div class="charge-info-bar">
+            <div class="charge-label-row">
+              <span class="charge-tag">⚡ 家人蓄力鉴定中</span>
+              <span id="charge-conf-badge" class="charge-conf hud-mono">置信度 0%</span>
+            </div>
+            <div id="charge-pose-name" class="charge-pose-name">奶蛙姿势</div>
+            <div class="charge-linear-track">
+              <div id="charge-linear-fill" class="charge-linear-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 采集倒计时 & 录制遮罩层 -->
+        <div id="collect-overlay" class="collect-overlay hidden" aria-live="assertive">
+          <div class="collect-top-bar">
+            <div class="collect-rec-badge">
+              <span class="rec-dot"></span>
+              <span id="collect-phase-label">准备倒计时</span>
+            </div>
+            <button id="btn-overlay-stop-collect" class="btn-danger-sm" type="button">停止录制</button>
+          </div>
+
+          <div class="collect-body">
+            <div class="collect-ref-card">
+              <img id="collect-ref-img" class="collect-ref-img" src="" alt="参考姿势" />
+              <div class="collect-ref-meta">
+                <div class="collect-ref-tag">目标采集动作</div>
+                <div id="collect-pose-name" class="collect-pose-name">--</div>
+                <p id="collect-pose-hint" class="collect-pose-hint">--</p>
+              </div>
+            </div>
+
+            <div id="collect-countdown-box" class="collect-countdown-box">
+              <div id="collect-countdown-num" class="collect-countdown-num">3</div>
+              <div class="collect-countdown-tip">请摆好目标动作并保持在画面内</div>
+            </div>
+          </div>
+
+          <div class="collect-progress-panel">
+            <div class="collect-progress-head">
+              <span>采集进度</span>
+              <span id="collect-progress-text" class="hud-mono">0 / 80 帧</span>
+            </div>
+            <div class="collect-progress-track">
+              <div id="collect-progress-fill" class="collect-progress-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 爆发弹窗层（触发奶蛙成功时） -->
+        <div id="burst-overlay" class="burst-overlay hidden" role="dialog" aria-modal="false" aria-label="鉴定成功">
+          <div class="burst-flash" aria-hidden="true"></div>
+          <div class="burst-shockwave wave-1" aria-hidden="true"></div>
+          <div class="burst-shockwave wave-2" aria-hidden="true"></div>
+          <div class="burst-rays" aria-hidden="true"></div>
+
+          <div id="burst-card" class="burst-card">
+            <button id="btn-burst-close" class="burst-close" type="button" aria-label="关闭弹窗">&times;</button>
+
+            <div id="burst-rainbow-banner" class="burst-rainbow-banner hidden">
+              ✨ SSR 隐藏款 · 彩虹奶蛙降临 ✨
+            </div>
+
+            <!-- 识别成功直出：我与奶蛙的双栏同框合照 -->
+            <div id="burst-poster-stage" class="burst-poster-stage hidden">
+              <div class="burst-poster-frame">
+                <img id="burst-poster-img" class="burst-poster-img" src="" alt="我与奶蛙的同框合照" title="点击全屏放大查看合照" />
+              </div>
+              <div class="burst-poster-bar">
+                <div class="burst-poster-info">
+                  <div class="burst-poster-title-row">
+                    <span class="burst-kicker-inline">🎉 鉴定成功</span>
+                    <h2 id="burst-poster-title" class="burst-poster-title">功夫奶娃</h2>
+                    <span id="burst-poster-speech" class="burst-poster-speech">「Hola~ 嘎巴跌！」</span>
+                  </div>
+                  <span id="burst-poster-audio-status" class="burst-meta-chip">🔊 正在播放奶蛙原声</span>
+                </div>
+                <div class="burst-poster-actions">
+                  <a id="burst-download-btn" class="burst-meta-chip chip-download" href="#" download="nailong_match.jpg">
+                    ⬇️ 保存合照
+                  </a>
+                  <button id="burst-zoom-btn" class="burst-meta-chip chip-clickable" type="button">
+                    🔍 全屏放大
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 无合照时的单图兜底卡片（竖向长方形完整展示） -->
+            <div id="burst-fallback-content" class="burst-content">
+              <div class="burst-artwork-wrap">
+                <div class="burst-artwork-glow" aria-hidden="true"></div>
+                <img id="burst-image" class="burst-image" src="" alt="奶蛙立绘" />
+                <div id="burst-conf-badge" class="burst-conf-badge">
+                  <span class="conf-label">家人血统</span>
+                  <span id="burst-conf-val" class="conf-val hud-mono">98%</span>
+                </div>
+              </div>
+
+              <div class="burst-details">
+                <div class="burst-kicker">🎉 奶龙家人鉴定成功</div>
+                <h2 id="burst-title" class="burst-title">功夫奶娃</h2>
+                <div id="burst-subtitle" class="burst-subtitle">扎马步奶蛙 · 咏春推掌</div>
+
+                <div class="burst-speech-bubble">
+                  <div class="speech-wave" aria-hidden="true">
+                    <span></span><span></span><span></span><span></span>
+                  </div>
+                  <p id="burst-speech" class="burst-speech">Hola~ 嘎巴跌！</p>
+                </div>
+
+                <div class="burst-footer-meta">
+                  <span id="burst-audio-status" class="burst-meta-chip">🔊 正在播放奶蛙原声</span>
+                  <button id="burst-capture-chip" class="burst-meta-chip chip-clickable hidden" type="button">
+                    📸 查看本次同框照
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 超大游戏启停主控条 -->
+      <div class="game-control-bar" aria-label="游戏控制">
+        <button id="btn-game-start" class="btn-game btn-game-start" type="button">
+          <span class="btn-game-icon" aria-hidden="true">▶</span>
+          <span class="btn-game-text">
+            <strong id="btn-game-start-label">开始游戏</strong>
+            <small id="btn-game-start-sub">点击后倒计时 3 秒准备</small>
+          </span>
+        </button>
+
+        <button id="btn-game-stop" class="btn-game btn-game-stop" type="button" disabled>
+          <span class="btn-game-icon" aria-hidden="true">⏹</span>
+          <span class="btn-game-text">
+            <strong id="btn-game-stop-label">停止游戏</strong>
+            <small id="btn-game-stop-sub">切回安全待机，不触发识别</small>
+          </span>
+        </button>
+      </div>
+
+      <!-- 舞台底部轻量提示条 -->
+      <div class="stage-footer-bar">
+        <div class="stage-tip-item">
+          <span class="tip-badge">TIP</span>
+          <span id="stage-tip-text">站在摄像头前摆出奶蛙经典姿势并保持约 0.5 秒触发鉴定，或点击右侧任意卡片「试播预览」立即体验！</span>
+        </div>
+        <div class="stage-stats-mini">
+          <span id="footer-sample-wrap">样本总数：<strong id="footer-sample-total" class="hud-mono">0</strong><span class="divider"> · </span></span>
+          <span>已解锁：<strong id="footer-unlocked-count" class="hud-mono">0/10</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右侧双标签控制台 -->
+    <aside class="control-column" aria-label="演播室控制台">
+      <nav class="tab-nav" role="tablist">
+        <button id="tab-btn-dex" class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-dex" data-tab="dex" type="button">
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span>实战图鉴</span>
+          <span id="tab-dex-badge" class="tab-badge hud-mono">0/10</span>
+        </button>
+
+        <button id="tab-btn-train" class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-train" data-tab="train" type="button">
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>采集与训练</span>
+          <span id="tab-train-badge" class="tab-badge hud-mono">0 帧</span>
+        </button>
+      </nav>
+
+      <!-- TAB 1: 实战图鉴 & 同框照画廊 -->
+      <section id="panel-dex" class="tab-panel active" role="tabpanel" aria-labelledby="tab-btn-dex">
+        <div class="panel-scroll">
+          <!-- 图鉴解锁总览 -->
+          <div class="dex-summary-card">
+            <div class="dex-summary-head">
+              <div>
+                <div class="section-eyebrow">FAMILY COLLECTION</div>
+                <h2 class="section-title">奶蛙家人图鉴</h2>
+              </div>
+              <button id="btn-reset-dex" class="text-btn" type="button" title="重置本机已解锁计数">重置图鉴</button>
+            </div>
+            <div class="dex-progress-row">
+              <div class="dex-progress-track">
+                <div id="dex-progress-fill" class="dex-progress-fill"></div>
+              </div>
+              <span id="dex-progress-label" class="hud-mono">0 / 10</span>
+            </div>
+          </div>
+
+          <!-- 10 只奶蛙卡片网格 -->
+          <div id="dex-grid" class="dex-grid">
+            <div class="empty-state">正在加载奶蛙图鉴...</div>
+          </div>
+
+          <!-- 最近同框照画廊 -->
+          <div class="gallery-section">
+            <div class="section-header-row">
+              <div>
+                <div class="section-eyebrow">MATCH SNAPSHOTS</div>
+                <h3 class="section-title">最近同框照</h3>
+              </div>
+              <div class="gallery-actions">
+                <span id="gallery-count" class="count-chip hud-mono">0 张</span>
+                <button id="btn-refresh-gallery" class="mini-icon-btn" type="button" title="刷新同框照画廊" aria-label="刷新画廊">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div id="gallery-grid" class="gallery-grid">
+              <div class="empty-state">触发任意奶蛙动作或点击「试播预览」，即可自动生成双栏同框海报！</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: 数据采集 & 训练中心 -->
+      <section id="panel-train" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-train">
+        <div class="panel-scroll">
+          <!-- 采集状态头 -->
+          <div class="train-header-card">
+            <div class="train-stats-row">
+              <div>
+                <div class="section-eyebrow">DATASET &amp; TRAINING</div>
+                <h2 class="section-title">动作数据采集中心</h2>
+              </div>
+              <div class="sample-total-pill">
+                <span class="label">总帧数</span>
+                <strong id="train-sample-total" class="hud-mono">0</strong>
+              </div>
+            </div>
+            <p class="train-helper-text">建议先录制 <strong>自然站立（idle）</strong> 和 9 个常规奶蛙动作（每类分 2~3 轮共 160~240 帧），<strong>彩虹奶蛙</strong>作为捧腹大笑 SSR 隐藏款会自动按概率爆出，无需单独录制！</p>
+            <div id="active-collect-banner" class="active-collect-banner hidden">
+              <div class="active-collect-info">
+                <span class="rec-dot"></span>
+                <span id="active-collect-text">正在录制中...</span>
+              </div>
+              <button id="btn-stop-collect" class="btn-danger-sm" type="button">停止录制</button>
+            </div>
+          </div>
+
+          <!-- 全部 11 类姿势采集列表 -->
+          <div id="collect-list" class="collect-list">
+            <div class="empty-state">正在加载动作配置...</div>
+          </div>
+
+          <!-- 模型评估结果区 -->
+          <div id="eval-section" class="eval-section hidden">
+            <div class="section-header-row">
+              <div>
+                <div class="section-eyebrow">MODEL EVALUATION</div>
+                <h3 class="section-title">模型训练对比</h3>
+              </div>
+              <span id="eval-cv-chip" class="count-chip">CV 评估</span>
+            </div>
+
+            <div id="eval-compare-grid" class="eval-compare-grid"></div>
+
+            <div id="eval-matrix-wrap" class="eval-matrix-wrap hidden">
+              <div class="eval-matrix-head">
+                <span>交叉验证混淆矩阵</span>
+                <span class="matrix-zoom-hint">点击放大查看</span>
+              </div>
+              <img id="eval-confusion-img" class="eval-confusion-img" src="" alt="混淆矩阵评估图" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部固定操作栏 -->
+        <div class="train-footer-actions">
+          <button id="btn-train-model" class="btn-primary-glow" type="button">
+            <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span id="btn-train-label">一键训练模型</span>
+          </button>
+
+          <button id="btn-tts-gen" class="btn-secondary" type="button" title="自动为缺少配音文件的动作生成 TTS 语音">
+            <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+            <span id="btn-tts-label">补齐配音</span>
+          </button>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <!-- 灯箱画廊（支持同框照 & 混淆矩阵大图预览与下载） -->
+  <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="图片大图预览">
+    <div id="lightbox-backdrop" class="lightbox-backdrop"></div>
+    <div class="lightbox-dialog">
+      <div class="lightbox-header">
+        <div class="lightbox-meta">
+          <h3 id="lightbox-title" class="lightbox-title">同框照预览</h3>
+          <span id="lightbox-sub" class="lightbox-sub"></span>
+        </div>
+        <div class="lightbox-controls">
+          <a id="lightbox-download" class="btn-primary-sm" href="#" download>
+            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>下载原图</span>
+          </a>
+          <button id="btn-lightbox-close" class="lightbox-close-btn" type="button" aria-label="关闭灯箱">&times;</button>
+        </div>
+      </div>
+
+      <div class="lightbox-stage">
+        <button id="btn-lightbox-prev" class="lightbox-nav nav-prev hidden" type="button" aria-label="上一张">&#8249;</button>
+        <img id="lightbox-img" class="lightbox-img" src="" alt="预览图片" />
+        <button id="btn-lightbox-next" class="lightbox-nav nav-next hidden" type="button" aria-label="下一张">&#8250;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 游戏结束总结弹窗（血统纯度鉴定报告） -->
+  <div id="summary-overlay" class="summary-overlay hidden" role="dialog" aria-modal="true" aria-label="本局血统鉴定总结">
+    <div id="summary-backdrop" class="summary-backdrop"></div>
+    <div id="summary-card" class="summary-card">
+      <button id="btn-summary-close" class="summary-close" type="button" aria-label="关闭总结">&times;</button>
+
+      <div class="summary-header">
+        <div class="summary-eyebrow">NAILONG BLOODLINE REPORT</div>
+        <h2 class="summary-title">奶龙家人血统鉴定报告</h2>
+      </div>
+
+      <div class="summary-hero">
+        <!-- 纯度能量圆环 + 砸落式段位印章 -->
+        <div class="summary-ring-box">
+          <svg class="summary-ring-svg" viewBox="0 0 200 200">
+            <defs>
+              <linearGradient id="summaryRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FEF08A" />
+                <stop offset="50%" stop-color="#FACC15" />
+                <stop offset="100%" stop-color="#F59E0B" />
+              </linearGradient>
+              <linearGradient id="summaryRingRainbow" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FF3B6B" />
+                <stop offset="25%" stop-color="#FACC15" />
+                <stop offset="55%" stop-color="#4ADE80" />
+                <stop offset="80%" stop-color="#38BDF8" />
+                <stop offset="100%" stop-color="#C084FC" />
+              </linearGradient>
+            </defs>
+            <circle class="summary-ring-track" cx="100" cy="100" r="82" />
+            <circle id="summary-ring-arc" class="summary-ring-arc" cx="100" cy="100" r="82" />
+          </svg>
+          <div class="summary-ring-center">
+            <span class="summary-purity-label">奶家人纯度</span>
+            <div id="summary-purity-num" class="summary-purity-num hud-mono">0%</div>
+          </div>
+          <!-- 倾斜砸落印章 -->
+          <div id="summary-stamp" class="summary-stamp hidden">尊贵纯血奶家人</div>
+        </div>
+
+        <!-- 4 项核心战绩指标 -->
+        <div class="summary-metrics-grid">
+          <div class="summary-metric-card">
+            <span class="metric-k">本局用时</span>
+            <strong id="summary-duration" class="metric-v hud-mono">0.0s</strong>
+          </div>
+          <div class="summary-metric-card">
+            <span class="metric-k">完成动作</span>
+            <strong id="summary-actions" class="metric-v hud-mono">0 次</strong>
+          </div>
+          <div class="summary-metric-card">
+            <span class="metric-k">解锁种类</span>
+            <strong id="summary-unique" class="metric-v hud-mono">0 / 10</strong>
+          </div>
+          <div class="summary-metric-card">
+            <span class="metric-k">平均识别率</span>
+            <strong id="summary-avg-conf" class="metric-v hud-mono">0%</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- 专属鉴定评语 -->
+      <div class="summary-comment-box">
+        <span id="summary-rank-badge" class="summary-rank-badge">鉴定时</span>
+        <p id="summary-comment" class="summary-comment">正在测算你的奶龙基因浓度...</p>
+      </div>
+
+      <!-- 本命招牌奶蛙（MVP） -->
+      <div id="summary-mvp-card" class="summary-mvp-card hidden">
+        <img id="summary-mvp-img" class="summary-mvp-img" src="" alt="本命招牌奶蛙" />
+        <div class="summary-mvp-info">
+          <div class="summary-mvp-tag">★ 本局本命形态（最高匹配）</div>
+          <div id="summary-mvp-name" class="summary-mvp-name">--</div>
+          <div id="summary-mvp-meta" class="summary-mvp-meta">--</div>
+        </div>
+      </div>
+
+      <!-- 底部操作按钮 -->
+      <div class="summary-actions">
+        <button id="btn-summary-replay" class="btn-summary-primary" type="button">
+          <span>🔄</span>
+          <span>再来一局（3秒倒计时）</span>
+        </button>
+        <button id="btn-summary-save" class="btn-summary-secondary" type="button">
+          <span>📸</span>
+          <span>保存鉴定证书</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 全局 Toast 通知容器 -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

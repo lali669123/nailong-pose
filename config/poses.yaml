@@ -1,0 +1,147 @@
+app:
+  title: "奶龙家人鉴定 · 奶蛙动作识别"
+  mode: "studio"   # "studio" = 开发训练版（含采集与训练）；"release" = 精简发布版（隐藏全部训练功能）
+  camera_index: 0
+  frame_width: 640
+  frame_height: 480
+  flip_horizontal: true
+  host: "127.0.0.1"
+  port: 8000
+
+recognition:
+  idle_label: "idle"
+  confidence_threshold: 0.75
+  hold_seconds: 0.45
+  grace_seconds: 0.15
+  cooldown_seconds: 2.5
+  smoothing_window: 5
+
+tts:
+  voice: "zh-CN-XiaoyiNeural"
+  rate: "+10%"
+  pitch: "+8Hz"
+
+esp32:
+  enabled: false
+  host: "192.168.1.100"
+  port: 80
+  timeout_seconds: 0.5
+
+poses:
+  - id: "idle"
+    name: "自然站立（待机）"
+    subtitle: "日常待机态 · 防误触负样本"
+    speech: ""
+    image: "assets/images/idle.png"
+    audio: ""
+    color: "#94A3B8"
+    hint: "双手自然垂放、稍微走动或转头，告诉模型这不是奶蛙动作"
+    triggerable: false
+
+  - id: "01_kungfu"
+    name: "功夫奶娃"
+    subtitle: "扎马步奶蛙 · 咏春推掌"
+    speech: "Hola~ 嘎巴跌！"
+    image: "assets/images/01_kungfu.jpg"
+    audio: "assets/audio/01_kungfu.mp3"
+    color: "#FACC15"
+    hint: "双脚分开屈膝扎马步，左手向外推掌，右手握拳收在腹前"
+    triggerable: true
+
+  - id: "02_arms_crossed"
+    name: "抱胸奶蛙"
+    subtitle: "大佬奶蛙 · 自信站立"
+    speech: "嘎脚塞！"
+    image: "assets/images/02_arms_crossed.jpg"
+    audio: "assets/audio/02_arms_crossed.mp3"
+    color: "#FB923C"
+    hint: "双臂交叉抱在胸前，抬头挺胸摆出自信大佬站姿"
+    triggerable: true
+
+  - id: "03_rub_belly"
+    name: "摸肚子奶蛙"
+    subtitle: "捧肚奶蛙 · 挺大肚"
+    speech: "嘟噗。"
+    image: "assets/images/03_rub_belly.jpg"
+    audio: "assets/audio/03_rub_belly.mp3"
+    color: "#F59E0B"
+    hint: "微微挺起肚子，单手或双手轻贴在圆滚滚的肚子上"
+    triggerable: true
+
+  - id: "04_belly_laugh"
+    name: "捧腹大笑奶蛙"
+    subtitle: "经典奶蛙 · 仰头捧腹大笑（30% 掉隐藏款）"
+    speech: "咳哈哈哈哈~"
+    image: "assets/images/04_belly_laugh.jpg"
+    audio: "assets/audio/04_belly_laugh.mp3"
+    color: "#FBBF24"
+    hint: "仰起头身体微后仰，双手捧着肚子狂笑不止（30% 概率爆出彩虹隐藏款！）"
+    triggerable: true
+    trainable: true
+    hidden_variant:
+      pose_id: "10_rainbow"
+      probability: 0.30
+      pity_after: 8
+
+  - id: "05_think"
+    name: "托腮沉思奶蛙"
+    subtitle: "思考奶蛙 · 陷入沉思"
+    speech: "嘎嘎滴啦水~"
+    image: "assets/images/05_think.jpg"
+    audio: "assets/audio/05_think.mp3"
+    color: "#38BDF8"
+    hint: "一只手抵在下巴/脸颊处托腮思考，另一只手托住手肘或自然下垂"
+    triggerable: true
+
+  - id: "06_shocked"
+    name: "抱头震惊奶蛙"
+    subtitle: "震惊奶蛙 · 当场崩溃"
+    speech: "安~迪~"
+    image: "assets/images/06_shocked.jpg"
+    audio: "assets/audio/06_shocked.mp3"
+    color: "#EF4444"
+    hint: "双手举起紧紧抱住头两侧，双肘外张摆出大震惊姿势"
+    triggerable: true
+
+  - id: "07_point_laugh"
+    name: "叉腰指点奶蛙"
+    subtitle: "嘲讽奶蛙 · 叉腰指你"
+    speech: "哈哈哈，就是你！"
+    image: "assets/images/07_point_laugh.jpg"
+    audio: "assets/audio/07_point_laugh.wav"
+    color: "#A3E635"
+    hint: "一只手叉在腰上，另一只手抬起伸直向前指着镜头"
+    triggerable: true
+
+  - id: "08_balance"
+    name: "张臂平衡奶蛙"
+    subtitle: "金鸡独立奶蛙 · 展臂欢呼"
+    speech: "Hola~ 嘎巴跌！"
+    image: "assets/images/08_balance.jpg"
+    audio: "assets/audio/08_balance.mp3"
+    color: "#34D399"
+    hint: "双臂向两侧大幅张开保持平衡，单脚抬起金鸡独立"
+    triggerable: true
+
+  - id: "09_heart"
+    name: "比心奶蛙"
+    subtitle: "抬脚比心 · 双手大爱心"
+    speech: "嘎嘎滴啦水~"
+    image: "assets/images/09_heart.jpg"
+    audio: "assets/audio/09_heart.mp3"
+    color: "#F472B6"
+    hint: "双臂举过头顶弯曲合拢比大爱心（或胸前双手比心配抬脚）"
+    triggerable: true
+
+  - id: "10_rainbow"
+    name: "彩虹奶蛙"
+    subtitle: "SSR 隐藏款 · 捧腹大笑 30% 概率触发"
+    speech: "（14秒奶蛙爆笑原声）"
+    image: "assets/images/10_rainbow.png"
+    audio: "assets/audio/10_rainbow.mp3"
+    color: "#C084FC"
+    hint: "无需单独录制！摆出「捧腹大笑奶蛙」时有 30% 概率爆出（连非 8 次必出保底）"
+    triggerable: true
+    trainable: false
+    is_hidden: true
+    parent_pose_id: "04_belly_laugh"
